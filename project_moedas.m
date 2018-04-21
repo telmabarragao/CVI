@@ -4,6 +4,7 @@ orig = imread('Moedas1.jpg');
 
 %transform the image from rgb to grayscale
 gray = rgb2gray(orig);
+[row,col] = size(gray);
 
 BW = gray > (graythresh(gray)*255);
 
@@ -15,6 +16,7 @@ BW = imerode(BW, se1);
 %perform dilation with a disk mask on image BW
 BW = imdilate(BW, se2);
 
+%objects of image
 [lb num] = bwlabel(BW);
 
 figure; imshow(label2rgb(lb));  title('Colored Objects with centroid');
@@ -30,11 +32,12 @@ for k=1:num
 end
 hold off;
 
+%edge detection with sobel
 BWedges1 = edge(BW,'sobel');
+%edge detection with canny
 BWedges2 = edge(BW,'canny');
-figure;
-imshowpair(BWedges1,BWedges2,'montage')
-title('Sobel Filter                                   Canny Filter');
+
+figure;imshowpair(BWedges1,BWedges2,'montage');title('Sobel Filter                                   Canny Filter');
 
 
 %figure; imshow(BWedges); title('Derivative');
