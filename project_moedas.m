@@ -1,3 +1,5 @@
+close all, clean all
+
 orig = imread('Moedas1.jpg');
 
 %transform the image from rgb to grayscale
@@ -17,8 +19,10 @@ BW = imdilate(BW, se2);
 
 figure; imshow(label2rgb(lb));  title('Colored Objects with centroid');
 
+%get the centroid, perimeter and area information of each object
 stats = regionprops(lb, 'Centroid', 'Perimeter', 'Area');
 
+%for each object draw the centroid 
 hold on;
 for k=1:num
     plot(stats(k).Centroid(1), stats(k).Centroid(2), 'k.', 'markersize',25);
@@ -26,5 +30,11 @@ for k=1:num
 end
 hold off;
 
-BWedges = edges(BW);
-figure; imshow(BWedges); title('Derivative');
+BWedges1 = edge(BW,'sobel');
+BWedges2 = edge(BW,'canny');
+figure;
+imshowpair(BWedges1,BWedges2,'montage')
+title('Sobel Filter                                   Canny Filter');
+
+
+%figure; imshow(BWedges); title('Derivative');
