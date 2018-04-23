@@ -24,16 +24,30 @@ BW = imdilate(BW, se2);
 %objects of image
 [lb num] = bwlabel(BW);
 
-figure; imshow(label2rgb(lb));  title('Colored Objects with centroid');
+
 
 %get the centroid, perimeter and area information of each object
 stats = regionprops(lb, 'Centroid', 'Perimeter', 'Area');
 objectCount = size(stats,1);
 
+
+T = struct2table(stats);
+colnames= {'Area', 'Centroid x','Centroid y', 'Perimeter'};
+t = uitable('Data', T{:,:}, 'ColumnName', colnames,'RowName', T.Properties.RowNames, 'Units', 'Normalized','Position', [0, 0, 1, 1]);
+saveas(t,'table.png');
+close all;
+ff = imread('table.png');
+figure;imshowpair(label2rgb(lb), ff, 'montage');  title('Colored Objects with centroid');
+
+
+%imshow(label2rgb(lb));  title('Area, Centroid and Perimeter value');
+
 %for each object draw the centroid 
 hold on;
 for k=1:num
     plot(stats(k).Centroid(1), stats(k).Centroid(2), 'k.', 'markersize',25);
+    txt = int2str(k);
+    text(stats(k).Centroid(1)-5,stats(k).Centroid(2)-25, txt);
     drawnow;
 end
 hold off;
