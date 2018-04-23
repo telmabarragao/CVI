@@ -1,6 +1,6 @@
 close all, clear all;
 
-orig = imread('Moedas2.jpg');
+orig = imread('Moedas1.jpg');
 
 %transform the image from rgb to grayscale
 gray = rgb2gray(orig);
@@ -25,16 +25,17 @@ BW = imdilate(BW, se2);
 [lb num] = bwlabel(BW);
 
 
-
 %get the centroid, perimeter and area information of each object
 stats = regionprops(lb, 'Centroid', 'Perimeter', 'Area');
 objectCount = size(stats,1);
 
+%create table converting the stats struct to table and add a new column
+%with the numbers
 T = struct2table(stats);
 T.ObjectNumber = zeros(objectCount, 1);
 T.ObjectNumber(:) = 1:objectCount;
 
-
+%transform table in figure
 colnames= {'Area', 'Centroid x','Centroid y', 'Perimeter', 'Object Number'};
 t = uitable('Data', T{:,:}, 'ColumnName', colnames,'RowName', T.Properties.RowNames, 'Units', 'Normalized','Position', [0, 0, 1, 1]);
 saveas(t,'table.png');
@@ -42,7 +43,7 @@ close all;
 ff = imread('table.png');
 figure;imshowpair(label2rgb(lb), ff, 'montage');  title('Colored Objects with centroid                            Table with values');
 
-%for each object draw the centroid 
+%for each object draw the centroid and put the number on it too
 hold on;
 for k=1:num
     plot(stats(k).Centroid(1), stats(k).Centroid(2), 'k.', 'markersize',25);
