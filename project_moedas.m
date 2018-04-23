@@ -2,6 +2,10 @@ close all, clear all;
 
 orig = imread('Moedas1.jpg');
 
+%orderBy = 'Area';
+orderBy = 'Perimeter';
+%orderBy = 'Area';
+
 %transform the image from rgb to grayscale
 gray = rgb2gray(orig);
 [row,col] = size(gray);
@@ -30,18 +34,18 @@ stats = regionprops(lb, 'Centroid', 'Perimeter', 'Area', 'BoundingBox');
 objectCount = size(stats,1);
 
 %create table converting the stats struct to table and add a new column
-%with the numbers
+%with the numbers and delete the Bounding Box column
 T = struct2table(stats);
 T.ObjectNumber = zeros(objectCount, 1);
 T.ObjectNumber(:) = 1:objectCount;
-T.BoundingBox = [];
 
 %transform table in figure
-colnames= {'Area', 'Centroid x','Centroid y', 'Perimeter', 'Object Number'};
+colnames= {'Area', 'Centroid x','Centroid y', 'BoundingBox x', 'BoundingBox y', 'BoundingBox width', 'BoundingBox height', 'Perimeter', 'Object Number'};
 t = uitable('Data', T{:,:}, 'ColumnName', colnames,'RowName', T.Properties.RowNames, 'Units', 'Normalized','Position', [0, 0, 1, 1]);
 saveas(t,'table.png');
 close all;
 ff = imread('table.png');
+%fff = imresize(ff, 0.75);
 figure;imshowpair(label2rgb(lb), ff, 'montage');  title('Colored Objects with centroid                            Table with values');
 
 %for each object draw the centroid and put the number on it too
@@ -69,8 +73,8 @@ BWedges2 = edge(BW,'canny');
 
 %-------------------------------------------
 % This section draws a green boundary around each object
-figure;
-imshow(BW);
+figure; 
+imshow(BW);title('Green Boundaries');
 hold on;
 boundaries = bwboundaries(BW);
 numberOfBoundaries = size(boundaries, 1);
@@ -85,12 +89,35 @@ hold off;
 % This section draws each detected object individually
 % will be useful when we want to order them by some criteria
 % like area, value, etc
-figure;
-for k = 1 : objectCount
-    bbox = stats(k).BoundingBox;
-    subImage = imcrop(orig, bbox);
-    subplot(3,4,k);
-    imshow(subImage);
+if(strcmp(orderBy,'Area'))
+    
+    TO = sortrows(T, 'Area');
+    figure;  
+    for k = 1 : objectCount
+        cenas = TO.ObjectNumber(k);
+        bbox = stats(cenas).BoundingBox;
+        subImage = imcrop(orig, bbox);
+        subplot(3,4,k);
+        imshow(subImage);title(['Area = ' int2str(stats(cenas).Area)]);
+        text(stats(cenas).BoundingBox(3)/2-25, stats(cenas).BoundingBox(4)+15, ['Coin ' num2str(cenas)]);
+    end
+    
+end
+
+
+if(strcmp(orderBy,'Perimeter'))
+    
+    TO = sortrows(T, 'Perimeter');
+    figure;  
+    for k = 1 : objectCount
+        cenas = TO.ObjectNumber(k);
+        bbox = stats(cenas).BoundingBox;
+        subImage = imcrop(orig, bbox);
+        subplot(3,4,k);
+        imshow(subImage);title(['Perimeter = ' int2str(stats(cenas).Perimeter)]);
+        text(stats(cenas).BoundingBox(3)/2-25, stats(cenas).BoundingBox(4)+15, ['Coin ' num2str(cenas)]);
+    end
+    
 end
 %-------------------------------------------
 
