@@ -4,6 +4,12 @@ orig = imread('Moedas1.jpg');
 
 money = 0.0;
 
+%variable used to see if its a circle
+%Area/Perimeter should be equals to R/2, so i'll use A/P = BBox.width/4
+%(diameter/2)/2
+arpe = 0.0;
+bbw = 0.0;
+
 orderBy = 'Area';
 %orderBy = 'Perimeter';
 %orderBy = 'Area';
@@ -57,7 +63,12 @@ for k=1:num
     txt = int2str(k);
     text(stats(k).Centroid(1)-5,stats(k).Centroid(2)-25, txt);
     area = stats(k).Area;
-    money = money + whichCoin(area);
+    perimeter = stats(k).Perimeter;
+    arpe = area/perimeter;
+    bbw = (stats(k).BoundingBox(3))/4;
+    if (arpe < bbw+10) && (arpe > bbw-10)
+        money = money + whichCoin(area);
+    end
     drawnow;
 end
 hold off;
