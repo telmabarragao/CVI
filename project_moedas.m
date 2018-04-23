@@ -26,7 +26,7 @@ BW = imdilate(BW, se2);
 
 
 %get the centroid, perimeter and area information of each object
-stats = regionprops(lb, 'Centroid', 'Perimeter', 'Area');
+stats = regionprops(lb, 'Centroid', 'Perimeter', 'Area', 'BoundingBox');
 objectCount = size(stats,1);
 
 %create table converting the stats struct to table and add a new column
@@ -34,6 +34,7 @@ objectCount = size(stats,1);
 T = struct2table(stats);
 T.ObjectNumber = zeros(objectCount, 1);
 T.ObjectNumber(:) = 1:objectCount;
+T.BoundingBox = [];
 
 %transform table in figure
 colnames= {'Area', 'Centroid x','Centroid y', 'Perimeter', 'Object Number'};
@@ -84,7 +85,6 @@ hold off;
 % This section draws each detected object individually
 % will be useful when we want to order them by some criteria
 % like area, value, etc
-stats = regionprops(lb,'BoundingBox');
 figure;
 for k = 1 : objectCount
     bbox = stats(k).BoundingBox;
