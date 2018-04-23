@@ -2,8 +2,10 @@ close all, clear all;
 
 orig = imread('Moedas1.jpg');
 
-%orderBy = 'Area';
-orderBy = 'Perimeter';
+money = 0.0;
+
+orderBy = 'Area';
+%orderBy = 'Perimeter';
 %orderBy = 'Area';
 
 %transform the image from rgb to grayscale
@@ -54,6 +56,8 @@ for k=1:num
     plot(stats(k).Centroid(1), stats(k).Centroid(2), 'k.', 'markersize',25);
     txt = int2str(k);
     text(stats(k).Centroid(1)-5,stats(k).Centroid(2)-25, txt);
+    area = stats(k).Area;
+    money = money + whichCoin(area);
     drawnow;
 end
 hold off;
@@ -92,23 +96,25 @@ hold off;
 if(strcmp(orderBy,'Area'))
     
     TO = sortrows(T, 'Area');
-    figure;  
+    strr = ['Money = ' num2str(money)];
+    figure('Name', strr);
     for k = 1 : objectCount
         cenas = TO.ObjectNumber(k);
+        area = stats(cenas).Area;
         bbox = stats(cenas).BoundingBox;
         subImage = imcrop(orig, bbox);
         subplot(3,4,k);
         imshow(subImage);title(['Area = ' int2str(stats(cenas).Area)]);
         text(stats(cenas).BoundingBox(3)/2-25, stats(cenas).BoundingBox(4)+15, ['Coin ' num2str(cenas)]);
     end
-    
 end
 
 
 if(strcmp(orderBy,'Perimeter'))
     
     TO = sortrows(T, 'Perimeter');
-    figure;  
+    strr = ['Money = ' num2str(money)];
+    figure('Name', strr);
     for k = 1 : objectCount
         cenas = TO.ObjectNumber(k);
         bbox = stats(cenas).BoundingBox;
@@ -118,6 +124,38 @@ if(strcmp(orderBy,'Perimeter'))
         text(stats(cenas).BoundingBox(3)/2-25, stats(cenas).BoundingBox(4)+15, ['Coin ' num2str(cenas)]);
     end
     
+end
+
+
+%-------------------------------------------
+%func to know which coin is it
+function y = whichCoin(x)
+    y = 0; 
+    if (9500 <= x) && (x < 12000)
+        y = 0.01;
+    end
+    if (12000 <= x) && (x < 17000)
+        y = 0.02;
+    end
+
+    if (17000 <= x) && (x < 18000)
+        y = 0.1;
+    end
+    if (18000 <= x) && (x < 20000)
+        y = 0.05;
+    end
+    if (20000 <= x) && (x < 22500)
+        y = 0.2;
+    end
+    if (22500 <= x) && (x < 24500)
+        y = 1;
+    end
+    if (24500 <= x) && (x < 27000)
+        y = 0.5;
+    end
+    if (27000 <= x)
+        y = 2;
+    end
 end
 %-------------------------------------------
 
