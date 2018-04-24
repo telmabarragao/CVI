@@ -1,6 +1,6 @@
 close all, clear all;
 
-fileToRead= 'Moedas4.jpg';
+fileToRead= 'Moedas3.jpg';
 
 orig = imread(fileToRead);
 
@@ -12,7 +12,7 @@ just_red = cat(3, red, a, a);
 %just_green = cat(3, a, green, a);
 %just_blue = cat(3, a, a, blue);
 %back_to_original_img = cat(3, red, green, blue);
-figure, imshow(just_red), title('Red channel')
+%figure, imshow(just_red), title('Red channel')
 
 money = 0.0;
 
@@ -32,8 +32,8 @@ gray = rgb2gray(just_red);
 
 BW = gray > (graythresh(gray)*255);
 %moedas3 - BW = gray > 139;
-se1 = strel('disk', 8); %moedas4 works well with size 8
-se2 = strel('disk', 4); %moedas4 works well with size 4
+se1 = strel('disk', 1); %moedas4 works well with size 8
+se2 = strel('disk', 6); %moedas4 works well with size 4
 
 %perform erosion with a disk mask on image BW
 BW = imerode(BW, se1);
@@ -48,10 +48,25 @@ BW = imdilate(BW, se2);
 %objects of image
 [lb num] = bwlabel(BW);
 
-
 %get the centroid, perimeter and area information of each object
 stats = regionprops(lb, 'Centroid', 'Perimeter', 'Area', 'BoundingBox');
 objectCount = size(stats,1);
+% 
+ %Thist = zeros(objectCount, objectCount);
+% for k=1:objectCount
+%     objimg = lb == k;
+%     maskedRgbImage = bsxfun(@times, orig, cast(objimg, 'like', orig));
+%     cropped = imcrop(maskedRgbImage, stats(1).BoundingBox);
+%     histt = 0;
+%     for j=k+1:objectCount
+%         objimgg = lb == j;
+%         maskedRgbImage = bsxfun(@times, orig, cast(objimgg, 'like', orig));
+%         cropped = imcrop(maskedRgbImage, stats(1).BoundingBox);
+%         h1 = hist(img);
+%         h2 = hist(img2);
+%         d = pdist2(h1',h2');
+%     end
+% end
 
 %create table converting the stats struct to table and add a new column
 %with the numbers and delete the Bounding Box column
@@ -103,7 +118,7 @@ for k=1:num
     perimeter = stats(k).Perimeter;
     arpe = area/perimeter;
     bbw = (stats(k).BoundingBox(3))/4;
-    if (arpe < bbw+10) && (arpe > bbw-10)
+    if (arpe < bbw+5) && (arpe > bbw-5)
         money = money + whichCoin(area, fileToRead);
     end
     drawnow;
@@ -142,7 +157,6 @@ hold off;
 % will be useful when we want to order them by some criteria
 % like area, value, etc
 if(strcmp(orderBy,'Area'))
-    
     TO = sortrows(T, 'Area');
     strr = ['Money = ' num2str(money)];
     figure('Name', strr);
@@ -153,7 +167,7 @@ if(strcmp(orderBy,'Area'))
         subImage = imcrop(orig, bbox);
         subplot(3,4,k);
         imshow(subImage);title(['Area = ' int2str(stats(cenas).Area)]);
-        text(stats(cenas).BoundingBox(3)/2-25, stats(cenas).BoundingBox(4)+15, ['Coin ' num2str(cenas)]);
+        text(stats(cenas).BoundingBox(3)/2-25, stats(cenas).BoundingBox(4)+15, ['Object ' num2str(cenas)]);
     end
 end
 
@@ -169,13 +183,13 @@ if(strcmp(orderBy,'Perimeter'))
         subImage = imcrop(orig, bbox);
         subplot(3,4,k);
         imshow(subImage);title(['Perimeter = ' int2str(stats(cenas).Perimeter)]);
-        text(stats(cenas).BoundingBox(3)/2-25, stats(cenas).BoundingBox(4)+15, ['Coin ' num2str(cenas)]);
+        text(stats(cenas).BoundingBox(3)/2-25, stats(cenas).BoundingBox(4)+15, ['Object ' num2str(cenas)]);
     end
     
 end
 
 figure; 
-imshow(orig);title('Select a Coin');
+imshow(orig);title('Select a Coin to see distance');
 hold on;
 [x,y] = ginput(1);
 for k=1:objectCount
@@ -194,6 +208,54 @@ for k=1:objectCount
             end
         end
     end
+end
+hold off;
+
+figure; 
+imshow(orig);title('Select a Coin to order by similarity');
+hold on;
+[x,y] = ginput(1);
+Thist = zeros(objectCount, 2);
+for k=1:objectCount
+    if (x > stats(k).BoundingBox(1)) && (x < (stats(k).BoundingBox(1) + stats(k).BoundingBox(3)))
+        if (y > stats(k).BoundingBox(2)) && (y < (stats(k).BoundingBox(2) + stats(k).BoundingBox(4)))
+            objimg = lb == k;
+            maskedRgbImage = bsxfun(@times, orig, cast(objimg, 'like', orig));
+            cropped = imcrop(maskedRgbImage, stats(k).BoundingBox);
+            redChannel = cropped(:,:,1);
+            greenChannel = cropped(:,:,2);
+            blueChannel = cropped(:,:,3);
+            meanR = mean(redChannel(:));
+            meanG = mean(greenChannel(:));
+            meanB = mean(blueChannel(:));
+           for j=1:objectCount
+                objimg2 = lb == j;
+                maskedRgbImage2 = bsxfun(@times, orig, cast(objimg2, 'like', orig));
+                cropped2 = imcrop(maskedRgbImage2, stats(j).BoundingBox);
+                redChannel2 = cropped2(:,:,1);
+                greenChannel2 = cropped2(:,:,2);
+                blueChannel2 = cropped2(:,:,3);
+                meanR2 = mean(redChannel2(:));
+                meanG2 = mean(greenChannel2(:));
+                meanB2 = mean(blueChannel2(:));
+                deltaR = abs(double(meanR) - double(meanR2));
+                deltaG = abs(double(meanG) - double(meanG2));
+                deltaB = abs(double(meanB) - double(meanB2));
+                Thist(j, 1) = j;
+                Thist(j, 2) = deltaR + deltaG + deltaB;
+           end
+            result = sortrows(Thist, 2);
+        end
+    end
+end
+figure; title('Ordered items by color');
+for k = 1 : objectCount
+    cenas = result(k, 1);
+    bbox = stats(cenas).BoundingBox;
+    subImage = imcrop(orig, bbox);
+    subplot(3,4,k);
+    imshow(subImage);title(['Color dif = ' int2str(result(k, 2))]);
+    %text(stats(cenas).BoundingBox(3)/2-25, stats(cenas).BoundingBox(4)+15, ['Object ' num2str(cenas)]);
 end
 hold off;
 
@@ -235,13 +297,12 @@ function y = whichCoin(x, file)
     if(strcmp(file, 'Moedas4.jpg') == 0)
         
         y = 0; 
-        if (9500 <= x) && (x < 12000)
+        if (9500 <= x) && (x < 14000)
             y = 0.01;
         end
-        if (12000 <= x) && (x < 17000)
+        if (14000 <= x) && (x < 17000)
             y = 0.02;
         end
-
         if (17000 <= x) && (x < 18000)
             y = 0.1;
         end
