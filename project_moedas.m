@@ -50,18 +50,43 @@ T.ObjectNumber(:) = 1:objectCount;
 %transform table in figure
 colnames= {'Area', 'Centroid x','Centroid y', 'BoundingBox x', 'BoundingBox y', 'BoundingBox width', 'BoundingBox height', 'Perimeter', 'Object Number'};
 t = uitable('Data', T{:,:}, 'ColumnName', colnames,'RowName', T.Properties.RowNames, 'Units', 'Normalized','Position', [0, 0, 1, 1]);
-saveas(t,'table.png');
-close all;
+%saveas(t,'table.png');
+%close all;
 ff = imread('table.png');
-%fff = imresize(ff, 0.75);
-figure;imshowpair(label2rgb(lb), ff, 'montage');  title('Colored Objects with centroid                            Table with values');
+%figure; imshow(t);
+fff = imresize(ff, 0.75);
+figure;%imshowpair(label2rgb(lb), ff, 'montage');  title('Colored Objects with centroid                            Table with values');
+imshow(label2rgb(lb));
 
 %for each object draw the centroid and put the number on it too
+Tdist = NaN(objectCount, objectCount);
 hold on;
 for k=1:num
+    %draw the point
     plot(stats(k).Centroid(1), stats(k).Centroid(2), 'k.', 'markersize',25);
     txt = int2str(k);
     text(stats(k).Centroid(1)-5,stats(k).Centroid(2)-25, txt);
+    
+    %relative distance
+    Tdist(1, k) = k;
+    Tdist(k, k) = 0;
+    for j=k+1:num
+        %stats(k).Centroid(1) stats(k).Centroid(2)
+        %plot([stats(k).Centroid(1) stats(j).Centroid(1)], [stats(k).Centroid(2) stats(j).Centroid(2)], '-');
+        %plot([stats(k).Centroid(1) stats(k).Centroid(2)], [stats(j+1).Centroid(1) stats(j+1).Centroid(2)], '-');
+        %plot([stats(k).Centroid(1) stats(k).Centroid(2)], [stats(j+2).Centroid(1) stats(j+2).Centroid(2)], '-');
+        %txt = ['k' int2str(k) 'j' int2str(j)];
+        %text(stats(j).Centroid(1)-5,stats(j).Centroid(2)-(25+k*10+j*10), txt);
+        
+        X = [stats(k).Centroid(1),stats(k).Centroid(2);stats(j).Centroid(1),stats(j).Centroid(2)];
+        d = pdist(X,'euclidean');
+        Tdist(j, k) = d;
+    end
+%     positionVector1 = [0.1, 0.2, 1, 1];    % position of first subplot
+%     subplot('Position',positionVector1);
+%     plot([0 0], [200 200], '-');
+    
+    %calculate money
     area = stats(k).Area;
     perimeter = stats(k).Perimeter;
     arpe = area/perimeter;
@@ -137,6 +162,28 @@ if(strcmp(orderBy,'Perimeter'))
     
 end
 
+figure; 
+imshow(orig);title('Select a Coin');
+hold on;
+[x,y] = ginput(1);
+for k=1:objectCount
+    if (x > stats(k).BoundingBox(1)) && (x < (stats(k).BoundingBox(1) + stats(k).BoundingBox(3)))
+        if (y > stats(k).BoundingBox(2)) && (y < (stats(k).BoundingBox(2) + stats(k).BoundingBox(4)))
+           for j=1:objectCount
+               if k < j
+                    txt = ['dist = ' num2str(Tdist(j, k))];
+                    text(stats(j).Centroid(1)-70,stats(j).Centroid(2)-(25), txt);
+               end
+               if k > j
+                    txt = ['dist = ' num2str(Tdist(k, j))];
+                    text(stats(j).Centroid(1)-70,stats(j).Centroid(2)-(25), txt);
+               end
+               plot([stats(k).Centroid(1) stats(j).Centroid(1)], [stats(k).Centroid(2) stats(j).Centroid(2)], '-');
+            end
+        end
+    end
+end
+hold off;
 
 %-------------------------------------------
 %func to know which coin is it
@@ -170,7 +217,10 @@ function y = whichCoin(x)
 end
 %-------------------------------------------
 
-
-
-
-
+%-------------------------------------------
+% function dummy = drawDists(nCoin, objectCount)
+%     for j=1:objectCount
+%         plot([stats(nCoin).Centroid(1) stats(j).Centroid(1)], [stats(nCoin).Centroid(2) stats(j).Centroid(2)], '-');
+%     end
+%     dummy = 0;
+% end
