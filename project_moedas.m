@@ -1,6 +1,18 @@
 close all, clear all;
 
-orig = imread('Moedas1.jpg');
+fileToRead= 'Moedas4.jpg';
+
+orig = imread(fileToRead);
+
+red = orig(:,:,1); % Red channel
+green = orig(:,:,2); % Green channel
+blue = orig(:,:,3); % Blue channel
+a = zeros(size(orig, 1), size(orig, 2));
+just_red = cat(3, red, a, a);
+%just_green = cat(3, a, green, a);
+%just_blue = cat(3, a, a, blue);
+%back_to_original_img = cat(3, red, green, blue);
+figure, imshow(just_red), title('Red channel')
 
 money = 0.0;
 
@@ -15,13 +27,13 @@ orderBy = 'Area';
 %orderBy = 'Area';
 
 %transform the image from rgb to grayscale
-gray = rgb2gray(orig);
+gray = rgb2gray(just_red);
 [row,col] = size(gray);
 
 BW = gray > (graythresh(gray)*255);
-
-se1 = strel('disk', 1); %moedas4 works well with size 7
-se2 = strel('disk', 6);
+%moedas3 - BW = gray > 139;
+se1 = strel('disk', 8); %moedas4 works well with size 8
+se2 = strel('disk', 4); %moedas4 works well with size 4
 
 %perform erosion with a disk mask on image BW
 BW = imerode(BW, se1);
@@ -92,7 +104,7 @@ for k=1:num
     arpe = area/perimeter;
     bbw = (stats(k).BoundingBox(3))/4;
     if (arpe < bbw+10) && (arpe > bbw-10)
-        money = money + whichCoin(area);
+        money = money + whichCoin(area, fileToRead);
     end
     drawnow;
 end
@@ -187,33 +199,70 @@ hold off;
 
 %-------------------------------------------
 %func to know which coin is it
-function y = whichCoin(x)
-    y = 0; 
-    if (9500 <= x) && (x < 12000)
-        y = 0.01;
-    end
-    if (12000 <= x) && (x < 17000)
-        y = 0.02;
-    end
+function y = whichCoin(x, file)
 
-    if (17000 <= x) && (x < 18000)
-        y = 0.1;
+    if(strcmp(file, 'Moedas4.jpg') == 1)
+        
+        y = 0; 
+        if (9000 <= x) && (x < 14000)
+            y = 0.01;
+        end
+        if (14000 <= x) && (x < 15000)
+            y = 0.02;
+        end
+
+        if (15000 <= x) && (x < 16000)
+            y = 0.1;
+        end
+        if (16000 <= x) && (x < 17000)
+            y = 0.05;
+        end
+        if (17000 <= x) && (x < 18000)
+            y = 0.2;
+        end
+        if (18000 <= x) && (x < 20000)
+            y = 1;
+        end
+        if (20000 <= x) && (x < 21000)
+            y = 0.5;
+        end
+        if (21000 <= x)
+            y = 2;
+        end
+        
     end
-    if (18000 <= x) && (x < 20000)
-        y = 0.05;
+   
+    if(strcmp(file, 'Moedas4.jpg') == 0)
+        
+        y = 0; 
+        if (9500 <= x) && (x < 12000)
+            y = 0.01;
+        end
+        if (12000 <= x) && (x < 17000)
+            y = 0.02;
+        end
+
+        if (17000 <= x) && (x < 18000)
+            y = 0.1;
+        end
+        if (18000 <= x) && (x < 20000)
+            y = 0.05;
+        end
+        if (20000 <= x) && (x < 22500)
+            y = 0.2;
+        end
+        if (22500 <= x) && (x < 24500)
+            y = 1;
+        end
+        if (24500 <= x) && (x < 27000)
+            y = 0.5;
+        end
+        if (27000 <= x)
+            y = 2;
+        end
+        
     end
-    if (20000 <= x) && (x < 22500)
-        y = 0.2;
-    end
-    if (22500 <= x) && (x < 24500)
-        y = 1;
-    end
-    if (24500 <= x) && (x < 27000)
-        y = 0.5;
-    end
-    if (27000 <= x)
-        y = 2;
-    end
+    
 end
 %-------------------------------------------
 
