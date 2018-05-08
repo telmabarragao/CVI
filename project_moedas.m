@@ -1,20 +1,35 @@
+%close everything and clear
 close all, clear all;
 
+%file to proces
 fileToRead= 'Moedas3.jpg';
 
+
+%read image to var
 orig = imread(fileToRead);
 
+%get the RGB components
 red = orig(:,:,1); % Red channel
 green = orig(:,:,2); % Green channel
 blue = orig(:,:,3); % Blue channel
+
+
+                                 %num of rows     %num of columns
+%create array of zeros in matrix size(orig, 1) x  size(orig, 2)
 a = zeros(size(orig, 1), size(orig, 2));
+
+
+%concatenate arrays of one channel color RGB
 just_red = cat(3, red, a, a);
 %just_green = cat(3, a, green, a);
 %just_blue = cat(3, a, a, blue);
+
+%concatenate arrays of color RGB (all) to get the original image
 %back_to_original_img = cat(3, red, green, blue);
 %figure, imshow(just_red), title('Red channel')
 
 money = 0.0;
+
 
 %variable used to see if its a circle
 %Area/Perimeter should be equals to R/2, so i'll use A/P = BBox.width/4
@@ -22,37 +37,51 @@ money = 0.0;
 arpe = 0.0;
 bbw = 0.0;
 
+
+%var to order by 
 orderBy = 'Area';
 %orderBy = 'Perimeter';
-%orderBy = 'Area';
 
-%transform the image from rgb to grayscale
+%transform the image from rgb to grayscale, the red image
 gray = rgb2gray(just_red);
 [row,col] = size(gray);
 
+%computes global treshold, level then greater then to get an array with 1(greater) or zeros not greater- binary image
+%maybe we could use  imbinarize  to generate binary image after graythresh
 BW = gray > (graythresh(gray)*255);
 %moedas3 - BW = gray > 139;
+
+
+%mask for erosion or dilation
 se1 = strel('disk', 1); %moedas4 works well with size 8
 se2 = strel('disk', 6); %moedas4 works well with size 4
+
 
 %perform erosion with a disk mask on image BW
 BW = imerode(BW, se1);
 %perform dilation with a disk mask on image BW
 BW = imdilate(BW, se2);
 
+
 %fills any holes in the regions
 % I suggest we use this, but I commented it because the teacher might not
 % like it
 %BW = imfill(BW, 'holes');
 
-%objects of image
+
+%objects of image - contains labels for the 8-connected objects found in BW.
 [lb num] = bwlabel(BW);
+
 
 %get the centroid, perimeter and area information of each object
 stats = regionprops(lb, 'Centroid', 'Perimeter', 'Area', 'BoundingBox');
+
+%count the row size of stats 
 objectCount = size(stats,1);
+
+
 % 
- %Thist = zeros(objectCount, objectCount);
+%Thist = zeros(objectCount, objectCount);
 % for k=1:objectCount
 %     objimg = lb == k;
 %     maskedRgbImage = bsxfun(@times, orig, cast(objimg, 'like', orig));
@@ -79,13 +108,15 @@ colnames= {'Area', 'Centroid x','Centroid y', 'BoundingBox x', 'BoundingBox y', 
 t = uitable('Data', T{:,:}, 'ColumnName', colnames,'RowName', T.Properties.RowNames, 'Units', 'Normalized','Position', [0, 0, 1, 1]);
 %saveas(t,'table.png');
 %close all;
-ff = imread('table.png');
+%ff = imread('table.png');
 %figure; imshow(t);
-fff = imresize(ff, 0.75);
-figure;%imshowpair(label2rgb(lb), ff, 'montage');  title('Colored Objects with centroid                            Table with values');
-imshow(label2rgb(lb));
+%fff = imresize(ff, 0.75);
+figure;imshow(label2rgb(lb));
+%imshowpair(label2rgb(lb), ff, 'montage');  title('Colored Objects with centroid                            Table with values');
+
 
 %for each object draw the centroid and put the number on it too
+%creates a matrix with underlying class of double, with NaN values in all elements.
 Tdist = NaN(objectCount, objectCount);
 hold on;
 for k=1:num
@@ -109,6 +140,9 @@ for k=1:num
         d = pdist(X,'euclidean');
         Tdist(j, k) = d;
     end
+    
+    
+    
 %     positionVector1 = [0.1, 0.2, 1, 1];    % position of first subplot
 %     subplot('Position',positionVector1);
 %     plot([0 0], [200 200], '-');
